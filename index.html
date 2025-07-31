@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chess Arena Pi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#1d1f27;
+      --fg:#e8e8ee;
+      --card:#2a2d3a;
+      --accent:#7d7aff;
+      --wood-light:#d5a64f;
+      --wood-dark:#b07f2d;
+      --frame:#6f4e1f;
+      --square-light:#f0d9b5;
+      --square-dark:#b58863;
+    }
+    * {box-sizing:border-box;}
+    body {
+      margin:0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:1.5rem;
+      gap:30px;
+      overflow-x:hidden;
+    }
+    .card {
+      width:100%;
+      max-width: 660px;
+      background: var(--card);
+      border-radius:18px;
+      padding:2rem 1.75rem 2.5rem;
+      box-shadow:0 50px 120px -10px rgba(0,0,0,0.5);
+      text-align:center;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+    }
+    .logo {
+      width: 140px;
+      height: 140px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0;
+      opacity:0;
+      animation: bounceIn .7s ease-out forwards, pulse 2.5s ease-in-out .7s infinite;
+    }
+    @keyframes bounceIn {
+      0% { transform: translateY(50px) scale(.7); opacity:0; }
+      60% { transform: translateY(-6px) scale(1.08); opacity:1; }
+      100% { transform: translateY(0) scale(1); }
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .welcome {
+      font-size:3rem;
+      font-weight:700;
+      margin:0;
+      line-height:1;
+    }
+    .sub {
+      font-size:1.1rem;
+      margin:0;
+      text-transform:uppercase;
+      opacity:.85;
+      letter-spacing:1px;
+    }
+    .btn {
+      cursor:pointer;
+      padding:16px 28px;
+      border:none;
+      border-radius:14px;
+      font-size:1.3rem;
+      font-weight:700;
+      background: linear-gradient(135deg,var(--accent),#8f9fff);
+      color:#fff;
+      margin-top:8px;
+      min-width:200px;
+      box-shadow:0 25px 80px -5px rgba(127,127,255,0.6);
+      transition:filter .15s;
+    }
+    .btn:active {filter:brightness(.9);}
+    .small-text {
+      font-size:0.85rem;
+      margin-top:6px;
+      opacity:.85;
+    }
+    .board-container {
+      display:none;
+      position:relative;
+      width:100%;
+      max-width: 700px;
+      padding:20px;
+      background: linear-gradient(135deg,var(--wood-light) 0%, var(--wood-dark) 100%);
+      border-radius:18px;
+      box-shadow:0 60px 140px -10px rgba(0,0,0,0.5);
+      margin-top:10px;
+      animation: popIn .4s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    @keyframes popIn {
+      0% { transform: scale(.7); opacity:0; }
+      60% { transform: scale(1.05); opacity:1; }
+      100% { transform: scale(1); }
+    }
+    .board-frame {
+      background: var(--frame);
+      padding:8px;
+      border-radius:12px;
+      display:flex;
+      justify-content:center;
+    }
+    .board {
+      position: relative;
+      width:560px;
+      aspect-ratio:1;
+      display:grid;
+      grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+      border-radius:8px;
+      overflow:hidden;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.3);
+    }
+    .square {
+      position: relative;
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:0;
+      user-select:none;
+    }
+    .square.light { background: var(--square-light); }
+    .square.dark { background: var(--square-dark); }
+    .piece {
+      width:80%;
+      height:80%;
+      cursor:grab;
+      touch-action: none;
+      position:relative;
+    }
+    .highlight {
+      outline:3px solid #ffd33f;
+      outline-offset:-3px;
+      border-radius:4px;
+    }
+    .status {
+      margin-top:12px;
+      font-size:1rem;
+      font-weight:600;
+    }
+    .small-note {
+      font-size:0.65rem;
+      margin-top:6px;
+      opacity:.6;
+      text-align:center;
+    }
+    canvas.confetti {
+      position:fixed;
+      top:0;
+      left:0;
+      pointer-events:none;
+      width:100%;
+      height:100%;
+      z-index:1000;
+    }
+  </style>
+</head>
+<body>
+  <canvas class="confetti" id="confetti-canvas"></canvas>
+
+  <div class="card" aria-label="Welcome card">
+    <div class="logo" aria-label="Pawn logo">
+      <svg width="96" height="96" viewBox="0 0 64 64" aria-hidden="true" style="display:block; color: #e8e8ee;">
+        <circle cx="32" cy="16" r="10" fill="currentColor" />
+        <path d="M22 52c0-8 20-8 20 0H22z" fill="currentColor" />
+        <path d="M24 44h16v8H24z" fill="currentColor" />
+        <path d="M16 56h32v4H16z" fill="currentColor" />
+      </svg>
+    </div>
+    <div class="welcome">welcome</div>
+    <div class="sub">The Chess Arena Pi</div>
+    <button class="btn" id="start-btn">Start</button>
+    <div class="small-text" id="start-msg">Tap start to begin the game.</div>
+  </div>
+
+  <div class="board-container" id="board-container" aria-label="Chess board area">
+    <div class="board-frame">
+      <div class="board" id="board" aria-label="Chessboard"></div>
+    </div>
+    <div class="status" id="status">Loading...</div>
+    <div class="small-note">White starts. Drag or tap to move. Basic check/checkmate detection.</div>
+  </div>
+
+  <script>
+    // Audio context
+    let audioCtx;
+    function ensureCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playPinDrop() {
+      ensureCtx();
+      const ctx = audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(900, ctx.currentTime);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+    }
+
+    function playClick() {
+      ensureCtx();
+      const ctx = audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.07);
+    }
+
+    function playMoveTone() {
+      ensureCtx();
+      const ctx = audioCtx;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(480, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.05);
+    }
+
+    // loser "kwang kwang kwang" sound: three metallic hits
+    function playLoserKwang() {
+      ensureCtx();
+      const ctx = audioCtx;
+      const playHit = (timeOffset) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "square";
+        osc.frequency.setValueAtTime(900, ctx.currentTime + timeOffset);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + timeOffset);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        // quick pitch drop to simulate "kwang"
+        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + timeOffset + 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.
