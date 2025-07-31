@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chess Arena Pi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#f0f0f5;
+      --fg:#1f1f28;
+      --card:#ffffff;
+      --radius:12px;
+      --transition:0.25s ease;
+    }
+    [data-theme="dark"] {
+      --bg:#1d1f27;
+      --fg:#e8e8ee;
+      --card:#2a2d3a;
+    }
+    * {box-sizing:border-box;}
+    body {
+      margin:0;
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:1rem;
+      transition: background var(--transition), color var(--transition);
+    }
+    .container {
+      width:100%;
+      max-width: 480px;
+      text-align:center;
+      padding:1.5rem 1rem;
+      border-radius:16px;
+      background: var(--card);
+      box-shadow:0 20px 40px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    .logo {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .welcome {
+      font-size:2rem;
+      font-weight:600;
+      margin:0 0 8px;
+    }
+    .sub {
+      margin:0 0 20px;
+      font-size:0.9rem;
+      letter-spacing:0.5px;
+    }
+    .buttons {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:12px;
+    }
+    .btn {
+      cursor:pointer;
+      padding:12px 18px;
+      border:none;
+      border-radius:10px;
+      font-size:1rem;
+      font-weight:600;
+      background: linear-gradient(135deg,#4f6ef7,#9c7aff);
+      color:#fff;
+      flex:1;
+      min-width:120px;
+      position:relative;
+      overflow:hidden;
+      transition:filter .2s;
+    }
+    .btn:active {filter:brightness(.92);}
+    .toggle-wrapper {
+      position:absolute;
+      top:12px;
+      right:12px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:0.75rem;
+    }
+    .switch {
+      position: relative;
+      width:50px;
+      height:26px;
+      display:inline-block;
+    }
+    .switch input {
+      opacity:0;
+      width:0;
+      height:0;
+    }
+    .slider {
+      position:absolute;
+      cursor:pointer;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      background:#ccc;
+      border-radius:999px;
+      transition:.25s;
+    }
+    .slider:before {
+      position:absolute;
+      content:"";
+      height:20px;
+      width:20px;
+      left:4px;
+      bottom:3px;
+      background:white;
+      border-radius:50%;
+      transition:.25s;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    }
+    input:checked + .slider {
+      background: #4f6ef7;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+    .start-text {
+      margin-top:6px;
+      font-size:0.75rem;
+      color:rgba(0,0,0,0.5);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .logo {transition:transform .6s ease;}
+      body.loaded .logo {transform: scale(1.03);}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" aria-label="Welcome card">
+    <div class="toggle-wrapper">
+      <label for="dark-toggle" aria-label="Dark mode toggle">
+        <div class="switch">
+          <input type="checkbox" id="dark-toggle" aria-label="Toggle dark mode" />
+          <span class="slider"></span>
+        </div>
+      </label>
+      <div style="user-select:none;">Dark</div>
+    </div>
+
+    <div class="logo" aria-label="Pawn logo">
+      <!-- Pawn SVG, square 1:1 -->
+      <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="16" r="10" fill="currentColor" />
+        <path d="M22 52c0-8 20-8 20 0H22z" fill="currentColor" />
+        <path d="M24 44h16v8H24z" fill="currentColor" />
+        <path d="M16 56h32v4H16z" fill="currentColor" />
+      </svg>
+    </div>
+    <div class="welcome">welcome</div>
+    <div class="sub">The Chess Arena Pi</div>
+
+    <div class="buttons">
+      <button class="btn" id="start-btn">Start</button>
+    </div>
+    <div class="start-text" id="start-msg">Click Start to begin.</div>
+  </div>
+
+  <script>
+    // Dark mode persistence
+    const toggle = document.getElementById("dark-toggle");
+    const root = document.documentElement;
+    const stored = localStorage.getItem("theme");
+    const applyTheme = (theme) => {
+      if (theme === "dark") {
+        document.body.setAttribute("data-theme", "dark");
+        toggle.checked = true;
+      } else {
+        document.body.removeAttribute("data-theme");
+        toggle.checked = false;
+      }
+      localStorage.setItem("theme", theme);
+    };
+    if (stored === "dark") applyTheme("dark");
+    else applyTheme("light");
+
+    toggle.addEventListener("change", () => {
+      applyTheme(toggle.checked ? "dark" : "light");
+    });
+
+    // Simple welcome animation trigger
+    window.addEventListener("load", () => {
+      document.body.classList.add("loaded");
+    });
+
+    // Start button functionality placeholder
+    document.getElementById("start-btn").addEventListener("click", () => {
+      const msg = document.getElementById("start-msg");
+      msg.textContent = "Starting... (hook your game logic into startGame())";
+      // Placeholder: call your actual game-init logic here
+      startGame();
+    });
+
+    function startGame() {
+      // Replace this with real initialization
+      console.log("Game start invoked.");
+      // e.g., initialize board, load assets, etc.
+    }
+  </script>
+</body>
+</html>
