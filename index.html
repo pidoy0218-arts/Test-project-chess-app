@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chess Arena Pi - Pawn Logo Starter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root {
+    --light-square: #d9f2d9;
+    --dark-square: #ffffff;
+    --white-piece: khaki;
+    --black-piece: #111;
+    --board-size: 480px;
+    font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    user-select: none;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: #0f111a;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    margin: 0;
+    min-height: 100vh;
+    gap: 1rem;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    max-width: 700px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-weight: 700;
+    font-size: 1.5rem;
+    position: relative;
+  }
+
+  .pawn-logo {
+    width: 52px;
+    height: 52px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: entrance .8s ease-out forwards;
+  }
+
+  .pawn-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 15px 25px rgba(16,185,129,0.45));
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); filter: drop-shadow(0 15px 25px rgba(16,185,129,0.45)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 20px 35px rgba(16,185,129,0.65)); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes entrance {
+    0% { opacity: 0; transform: translateY(-12px) scale(.8); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .subtitle {
+    font-size: .9rem;
+    opacity: .85;
+    margin-top: 4px;
+  }
+
+  .toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .9rem;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+  }
+  .switch input { display:none; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    background-color: #444;
+    transition: .3s;
+    border-radius: 999px;
+    box-shadow: inset 0 0 6px rgba(255,255,255,0.05);
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  input:checked + .slider {
+    background-color: #10b981;
+  }
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  .controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    background: #1f2535;
+    border: none;
+    padding: .55rem .9rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    transition: background .2s;
+    font-size: .8rem;
+  }
+
+  .btn:hover {
+    background: #2c3250;
+  }
+
+  .board-container {
+    position: relative;
+    width: var(--board-size);
+    height: var(--board-size);
+    display: grid;
+    grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+    border: 4px solid #222;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px -10px rgba(0,0,0,0.7);
+  }
+
+  .square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2rem;
+    cursor: pointer;
+    position: relative;
+    transition: background .2s;
+  }
+
+  .light { background: var(--light-square); }
+  .dark { background: var(--dark-square); }
+
+  .piece {
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .selected {
+    outline: 3px solid #f59e0b;
+    outline-offset: -3px;
+    border-radius: 6px;
+  }
+
+  .status {
+    margin-top: .5rem;
+    font-size: .9rem;
+  }
+
+  .instructions {
+    max-width: 700px;
+    font-size: .8rem;
+    background: #1c1f33;
+    padding: .8rem 1rem;
+    border-radius: 8px;
+    line-height: 1.3;
+  }
+
+  .small {
+    font-size: .7rem;
+    padding: .4rem .8rem;
+  }
+
+  .flip {
+    transform: rotate(180deg);
+  }
+
+  .disabled {
+    opacity: .4;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-wrapper">
+      <div class="pawn-logo" aria-label="Pawn logo animation">
+        <!-- Simple pawn SVG -->
+        <svg class="pawn-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="32" cy="16" r="10" fill="khaki" />
+          <path d="M16 54c0-10 16-12 16-12s16 2 16 12H16z" fill="khaki"/>
+          <rect x="20" y="26" width="24" height="8" rx="4" fill="khaki"/>
+          <path d="M12 52h40v4H12z" fill="rgba(255,255,255,0.05)"/>
+          <circle cx="32
