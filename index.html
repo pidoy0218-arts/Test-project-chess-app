@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chess Arena Pi - Starter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root {
+    --light-square: #d9f2d9;
+    --dark-square: #ffffff;
+    --white-piece: khaki;
+    --black-piece: #111;
+    --board-size: 480px;
+    font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    user-select: none;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: #0f111a;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    margin: 0;
+    min-height: 100vh;
+    gap: 1rem;
+  }
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .logo-wrapper {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    overflow: visible;
+    margin-bottom: 4px;
+    opacity: 0;
+    transform: scale(0.85);
+    animation: fadeInScale 0.8s cubic-bezier(.25,.8,.25,1) forwards;
+  }
+  @keyframes fadeInScale {
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .top-bar {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .toggle-wrapper {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .9rem;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+  }
+  .switch input { display:none; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    background-color: #444;
+    transition: .3s;
+    border-radius: 999px;
+    box-shadow: inset 0 0 6px rgba(255,255,255,0.05);
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  input:checked + .slider {
+    background-color: #10b981;
+  }
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  .board-container {
+    position: relative;
+    width: var(--board-size);
+    height: var(--board-size);
+    display: grid;
+    grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+    border: 4px solid #222;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px -10px rgba(0,0,0,0.7);
+  }
+
+  .square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2rem;
+    cursor: pointer;
+    position: relative;
+    transition: background .2s;
+  }
+
+  .light { background: var(--light-square); }
+  .dark { background: var(--dark-square); }
+
+  .piece {
+    pointer-events: none;
+    line-height: 1;
+    transition: transform .15s ease; /* subtle move appearance */
+  }
+
+  .selected {
+    outline: 3px solid #f59e0b;
+    outline-offset: -3px;
+    border-radius: 6px;
+  }
+
+  .status {
+    margin-top: .5rem;
+    font-size: .9rem;
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  .controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    background: #1f2535;
+    border: none;
+    padding: .6rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    transition: background .2s;
+    color: #eee;
+  }
+
+  .btn:hover {
+    background: #2c3250;
+  }
+
+  .small {
+    font-size: .8rem;
+    padding: .4rem .8rem;
+  }
+
+  .flip {
+    transform: rotate(180deg);
+  }
+
+  .disabled {
+    opacity: .4;
+    pointer-events: none;
+  }
+
+  .instructions {
+    max-width: 600px;
+    font-size: .8rem;
+    background: #1c1f33;
+    padding: .8rem 1rem;
+    border-radius: 8px;
+    line-height: 1.3;
+  }
+
+  .logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo-wrapper">
+      <!-- drop your real logo.png in same folder -->
+      <img src="logo.png" alt="Chess Arena Pi" class="logo-img" />
+    </div>
+    <div class="title">Chess Arena Pi</div>
+  </div>
+
+  <div class="top-bar">
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <div class="toggle-wrapper">
+        <label class="switch">
+          <input id="startToggle" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+        <div id="toggleLabel">Game Paused</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="resetBtn" class="btn small">Reset</button>
+      <button id="flipBtn" class="btn small">Flip Board</button>
+    </div>
+  </div>
+
+  <div class="board-container" id="board"></div>
+  <div class="status" id="status">Toggle "start" to enable play.</div>
+
+  <div class="instructions">
+    <strong>Instructions:</strong>
+    <ul>
+      <li>Flip the start switch to enable moves.</li>
+      <li>Click a piece to select, then click a legal target to move.</li>
+      <li>Basic legal movement enforced (no castling/en passant/promotion yet).</li>
+      <li>Colors: Khaki = White; Black = Black. Board uses light green / white squares.</li>
+      <li>Game ends when a king is captured (rudimentary checkmate).</li>
+    </ul>
+  </div>
+
+  <!-- Audio placeholders -->
+  <audio id="selectSound" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YbAAAAA="></audio>
+  <audio id="moveSound" src="data:audio/wav;base64,UklGRjwAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YbAAAAA="></audio>
+  <audio id="winSound" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YbAAAAA="></audio>
+
+<script>
+  // Initial setup
+  const initialFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+  const pieceUnicode = {
+    p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
+    P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
+  };
+  let boardState = [];
+  let selected = null;
+  let whiteToMove = true;
+  let gameActive = false;
+  const boardEl = document.getElementById("board");
+  const statusEl = document.getElementById("status");
+  const toggle = document.getElementById("startToggle");
+  const toggleLabel = document.getElementById("toggleLabel");
+  const selectSound = document.getElementById("selectSound");
+  const moveSound = document.getElementById("moveSound");
+  const winSound = document.getElementById("winSound");
+
+  function playSound(el) {
+    try { el.currentTime = 0; el.play(); } catch {}
+  }
+
+  function resetBoard() {
+    boardState = [];
+    const rows = initialFEN.split("/");
+    for (let r = 0; r < 8; r++) {
+      const row = [];
+      for (let i = 0; i < rows[r].length; i++) {
+        const ch = rows[r][i];
+        if (/\d/.test(ch)) {
+          const count = parseInt(ch);
+          for (let k = 0; k < count; k++) row.push(null);
+        } else row.push(ch);
+      }
+      boardState.push(row);
+    }
+    whiteToMove = true;
+    selected = null;
+    render();
+    updateStatus();
+  }
+
+  function isUpper(p) { return p && p === p.toUpperCase(); }
+  function isLower(p) { return p && p === p.toLowerCase(); }
+
+  function render() {
+    boardEl.innerHTML = "";
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const sq = document.createElement("div");
+        sq.classList.add("square");
+        const isLight = (r + c) % 2 === 0;
+        sq.classList.add(isLight ? "light" : "dark");
+        sq.dataset.r = r;
+        sq.dataset.c = c;
+
+        if (selected && selected.r === r && selected.c === c) {
+          sq.classList.add("selected");
+        }
+
+        const piece = boardState[r][c];
+        if (piece) {
+          const pEl = document.createElement("div");
+          pEl.classList.add("piece");
+          pEl.textContent = pieceUnicode[piece] || "?";
+          if (piece === piece.toUpperCase()) {
+            pEl.style.color = "khaki";
+          } else {
+            pEl.style.color = "black";
+          }
+          sq.appendChild(pEl);
+        }
+
+        sq.addEventListener("click", () => onSquareClick(r, c));
+        boardEl.appendChild(sq);
+      }
+    }
+  }
+
+  function updateStatus(txt) {
+    if (txt) {
+      statusEl.textContent = txt;
+      return;
+    }
+    if (!gameActive) {
+      statusEl.textContent = "Game is paused. Flip start to play.";
+      return;
+    }
+    statusEl.textContent = (whiteToMove ? "White" : "Black") + " to move.";
+  }
+
+  function onSquareClick(r, c) {
+    if (!gameActive) return;
+    const clicked = boardState[r][c];
+    if (selected) {
+      if (tryMove(selected.r, selected.c, r, c)) {
+        playSound(moveSound);
+        selected = null;
+        whiteToMove = !whiteToMove;
+        checkVictory();
+        render();
+        updateStatus();
+        return;
+      }
+      if (clicked && ((whiteToMove && isUpper(clicked)) || (!whiteToMove && isLower(clicked)))) {
+        selected = { r, c };
+        playSound(selectSound);
+        render();
+        updateStatus();
+        return;
+      }
+      selected = null;
+      render();
+      updateStatus();
+      return;
+    } else {
+      if (clicked && ((whiteToMove && isUpper(clicked)) || (!whiteToMove && isLower(clicked)))) {
+        selected = { r, c };
+        playSound(selectSound);
+        render();
+        updateStatus();
+      }
+    }
+  }
+
+  function tryMove(sr, sc, tr, tc) {
+    const piece = boardState[sr][sc];
+    if (!piece) return false;
+    const target = boardState[tr][tc];
+    if (target && ((isUpper(piece) && isUpper(target)) || (isLower(piece) && isLower(target)))) return false;
+    const dr = tr - sr;
+    const dc = tc - sc;
+    const absdr = Math.abs(dr);
+    const absdc = Math.abs(dc);
+    const pLower = piece.toLowerCase();
+
+    if (pLower === "p") {
+      const dir = isUpper(piece) ? -1 : 1;
+      if (dc === 0 && dr === dir && !target) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      if (dc === 0 && dr === dir*2 && !target) {
+        if ((isUpper(piece) && sr === 6) || (isLower(piece) && sr === 1)) {
+          const between = boardState[sr + dir][sc];
+          if (!between) {
+            boardState[tr][tc] = piece;
+            boardState[sr][sc] = null;
+            return true;
+          }
+        }
+      }
+      if (absdc === 1 && dr === dir && target) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      return false;
+    }
+    if (pLower === "r") {
+      if ((dr === 0 || dc === 0) && pathClear(sr, sc, tr, tc)) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      return false;
+    }
+    if (pLower === "n") {
+      if ((absdr === 2 && absdc === 1) || (absdr === 1 && absdc === 2)) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      return false;
+    }
+    if (pLower === "b") {
+      if (absdr === absdc && pathClear(sr, sc, tr, tc)) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      return false;
+    }
+    if (pLower === "q") {
+      if ((absdr === absdc || dr === 0 || dc === 0) && pathClear(sr, sc, tr, tc)) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      return false;
+    }
+    if (pLower === "k") {
+      if ((Math.max(absdr, absdc) === 1)) {
+        boardState[tr][tc] = piece;
+        boardState[sr][sc] = null;
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  function pathClear(sr, sc, tr, tc) {
+    const dr = Math.sign(tr - sr);
+    const dc = Math.sign(tc - sc);
+    let r = sr + dr;
+    let c = sc + dc;
+    while (r !== tr || c !== tc) {
+      if (boardState[r][c]) return false;
+      r += dr;
+      c += dc;
+    }
+    return true;
+  }
+
+  function checkVictory() {
+    let whiteKing = false;
+    let blackKing = false;
+    for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+      const p = boardState[r][c];
+      if (p === "K") whiteKing = true;
+      if (p === "k") blackKing = true;
+    }
+    if (!whiteKing || !blackKing) {
+      gameActive = false;
+      const winner = whiteKing ? "White" : "Black";
+      statusEl.textContent = `Game over. ${winner} wins (king captured).`; 
+      playSound(winSound);
+    }
+  }
+
+  // UI hooks
+  toggle.addEventListener("change", () => {
+    gameActive = toggle.checked;
+    toggleLabel.textContent = gameActive ? "Game Active" : "Game Paused";
+    updateStatus();
+    if (!gameActive) selected = null;
+    render();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    resetBoard();
+  });
+
+  document.getElementById("flipBtn").addEventListener("click", () => {
+    boardEl.classList.toggle("flip");
+  });
+
+  // init
+  resetBoard();
+</script>
+</body>
+</html>
