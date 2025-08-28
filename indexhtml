@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Arena Pi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    .screen {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    button {
+      margin: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #board {
+      width: 90vw;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+  </style>
+  <!-- chess.js for rules -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <!-- chessboard.js for UI -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+</head>
+<body>
+  <!-- Start Screen -->
+  <div id="start" class="screen active">
+    <h1>♟️ Chess Arena Pi</h1>
+    <button onclick="goTo('menu')">Start</button>
+  </div>
+
+  <!-- Menu -->
+  <div id="menu" class="screen">
+    <h2>Main Menu</h2>
+    <button onclick="goTo('quick')">Quick Game</button>
+    <button onclick="goTo('classic')">Classic</button>
+  </div>
+
+  <!-- Quick Game Screen -->
+  <div id="quick" class="screen">
+    <h2>Quick Game</h2>
+    <div id="board"></div>
+    <button onclick="goTo('menu')">Back</button>
+  </div>
+
+  <!-- Classic Screen (placeholder for now) -->
+  <div id="classic" class="screen">
+    <h2>Classic Mode (Coming Soon)</h2>
+    <button onclick="goTo('menu')">Back</button>
+  </div>
+
+  <script>
+    // Screen navigation
+    function goTo(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      if (id === 'quick') initBoard();
+    }
+
+    // Chess setup
+    let board, game;
+
+    function initBoard() {
+      game = new Chess();
+      board = Chessboard('board', {
+        draggable: true,
+        position: 'start',
+        onDrop: (source, target) => {
+          let move = game.move({ from: source, to: target, promotion: 'q' });
+          if (move === null) return 'snapback';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
